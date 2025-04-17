@@ -1,0 +1,82 @@
+<div class="card m-2" id="comments-new">
+    <div class="card-body">
+        <!-- 댓글 작성 폼 -->
+        <form>
+            <!-- 닉네임 입력 -->
+            <div class="mb-3">
+                <label class="form-label">닉네임</label>
+                <input type="text" class="form-control"
+                       id="new-comment-nickname">
+            </div>
+
+            <!-- 댓글 본문 입력 -->
+            <div class="mb-3">
+                <label class="form-label">댓글 내용</label>
+                <textarea type="text" class="form-control" rows="3"
+                          id="new-comment-body">
+                </textarea>
+            </div>
+
+            <!-- 히든 인풋 -->
+
+            <!--댓글 부모 게시글은, id값을 가지고 있어야 함.-->
+            <!--댓글 게시글에 종속되기 때문에-->
+            <!--댓글 작성 폼이 특정 게시글에 종속되므로, 게시글 정보가 존재할 때만 부모 게시글 ID를 포함하도록 하기 위해 article로 감싼다.-->
+            <!--부모 게시글 ID는 사용자가 직접 입력할 필요가 없고, 댓글이 어떤 게시글에 속하는지 서버에 전달하기 위한 정보이기에, 히든으로 인풋한다.-->
+            <!--{{id}}는 article 객체의 id 값을 히든 인풋 필드에 삽입-->
+            {{#article}}
+                <input type="hidden" id="new-comment-article-id" value="{{id}}">
+            {{/article}}
+
+            <!-- 전송 버튼 -->
+            <button type="button" class="btn btn-primary"
+                    id="comment-create-btn">댓글 작성
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    {
+        //1. 댓글 생성 버튼 변수화
+        //ID가 comment-create-btn인 요소를 선택하고, 이를 commentCreateBtn 변수에 저장합니다. 이 버튼은 댓글 생성 버튼을 의미
+        const commentCreateBtn = document.querySelector("#comment-create-btn");
+
+        //2. 댓글 클릭 이벤트 감지(addEventListener)
+        //클릭 이벤트 리스너를 추가합니다. 사용자가 이 버튼을 클릭하면, 지정된 콜백 함수가 실행
+        commentCreateBtn.addEventListener("click", function() {
+
+            // 새 댓글 객체 생성(닉네임/본문/부모게시글 id-)
+            const comment = {
+            //ID가 new-comment-nickname인 입력 요소에서 값을 가져와 댓글 객체의 __으로 설정
+                // 새 댓글의 닉네임
+                nickname: document.querySelector("#new-comment-nickname").value,
+                // 새 댓글의 본문
+                body: document.querySelector("#new-comment-body").value,
+                // 부모 게시글의 id
+                articleId: document.querySelector("#new-comment-article-id").value
+            };
+
+            // 댓글 객체 출력
+            console.log(comment);
+
+
+            // fetch() - 비동기 통신을 위한 API
+            const url = "/api/articles/" + comment.articleId + "/comments";
+            fetch(url, {
+                method: "post",    // POST 요청
+                headers: {         // 전송 본문의 데이터 타입(JSON) 정보
+                "Content-Type": "application/json"
+                },
+                 body: JSON.stringify(comment) //comment 객체를 JSON 문자열로 변환해 전송
+            }).then(response => {
+                // HTTP 응답 코드에 따른 메시지 출력
+                const msg = (response.ok) ? "댓글이 등록됐습니다." :
+                                            "댓글 등록 실패..!";
+                alert(msg);
+                // 현재 페이지 새로고침
+                window.location.reload();
+            });
+        });
+    }
+</script>
